@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppFramework", "AppFramework\AppFramework.csproj", "{F4D52AD0-31DB-4B7B-AB36-FE405F749616}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAL", "BAL\BAL.csproj", "{2ACB4C45-0C7B-4D13-847B-719C214446D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DASeatAllocation", "DASeatAllocation\DASeatAllocation.csproj", "{065D422D-93BA-476A-B817-D2A99715CE8B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Debug|x64.ActiveCfg = Debug|x64
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Debug|x64.Build.0 = Debug|x64
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Release|x64.ActiveCfg = Release|x64
+		{F4D52AD0-31DB-4B7B-AB36-FE405F749616}.Release|x64.Build.0 = Release|x64
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Debug|x64.ActiveCfg = Debug|x64
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Debug|x64.Build.0 = Debug|x64
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Release|x64.ActiveCfg = Release|x64
+		{2ACB4C45-0C7B-4D13-847B-719C214446D9}.Release|x64.Build.0 = Release|x64
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Debug|x64.ActiveCfg = Debug|x64
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Debug|x64.Build.0 = Debug|x64
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Release|x64.ActiveCfg = Release|x64
+		{065D422D-93BA-476A-B817-D2A99715CE8B}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F300D27A-CD80-4D5B-B1A6-1555F55413DF}
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
+EndGlobal
