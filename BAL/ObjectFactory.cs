@@ -115,6 +115,8 @@ namespace BAL
                     return new CSABSpecialAllocation2022();
                 case "HBTUBTech22":
                     return new HBTUBTechAllocation2022();
+                case "MMMUT24":
+                    return new MMMUTAllocation2024();
 
                 /*Added by Shivam on 05May2022 for Test Purpose End*/
                 default:

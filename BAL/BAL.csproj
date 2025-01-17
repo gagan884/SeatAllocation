@@ -86,6 +86,7 @@
     <Compile Include="APPCBGroupAllocation2022.cs" />
     <Compile Include="IIMCAllocation2022.cs" />
     <Compile Include="CSABSpecialAllocation2022.cs" />
+    <Compile Include="MMMUTAllocation2024.cs" />
     <Compile Include="UPTACBTECHAllocation2022.cs" />
     <Compile Include="UPSEECUETUGAllocation2022.cs" />
     <Compile Include="UPTACPGAllocation2022.cs" />
