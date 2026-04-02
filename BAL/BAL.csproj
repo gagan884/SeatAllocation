@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>BAL</RootNamespace>
     <AssemblyName>BAL</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,51 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CSABSplAllocation.cs" />
-    <Compile Include="AYUSHPGAllocation.cs" />
-    <Compile Include="AYUSHUGAllocation.cs" />
-    <Compile Include="HBTUBTechAllocation2022.cs" />
-    <Compile Include="JECAAllocation2022.cs" />
-    <Compile Include="JEMSCNAllocation2022.cs" />
-    <Compile Include="MCCUGAllocation2022.cs" />
-    <Compile Include="NEETPGAllocation2022.cs" />
-    <Compile Include="MCCUGAllocation.cs" />
-    <Compile Include="MCCPGAllocation.cs" />
-    <Compile Include="JECA2021Allocation.cs" />
-    <Compile Include="CSABSpecial.cs" />
-    <Compile Include="JACAllocation.cs" />
-    <Compile Include="CCMNAllocation2022.cs" />
-    <Compile Include="CCMTAllocation2022.cs" />
-    <Compile Include="ITIPunjabAllocation2022.cs" />
-    <Compile Include="APJEEAllocation2022.cs" />
-    <Compile Include="NCHMMSCAllocation2022.cs" />
-    <Compile Include="JELETAllocation2022.cs" />
-    <Compile Include="NIMCETAllocation2022.cs" />
-    <Compile Include="NCHMBSCAllocation2022.cs" />
-    <Compile Include="NEETMDSAllocation2022.cs" />
-    <Compile Include="TestNEETMDSAllocation2021.cs" />
-    <Compile Include="TestNCHMAllocation2021.cs" />
-    <Compile Include="TestNEETSSAllocation2021.cs" />
-    <Compile Include="TestCCMTAllocation2021.cs" />
-    <Compile Include="ShreshtaAllocation2022.cs" />
-    <Compile Include="JENPASUGAllocation2022.cs" />
-    <Compile Include="ANMGNMAllocation2022.cs" />
-    <Compile Include="JEPBNAllocation2022.cs" />
-    <Compile Include="JEECUPAllocation2022.cs" />
-    <Compile Include="HBTUMCAAllocation2022.cs" />
-    <Compile Include="JACChandigarhAllocation2022.cs" />
-    <Compile Include="APPCBGroupAllocation2022.cs" />
-    <Compile Include="IIMCAllocation2022.cs" />
-    <Compile Include="CSABSpecialAllocation2022.cs" />
-    <Compile Include="MMMUTAllocation2024.cs" />
-    <Compile Include="UPTACBTECHAllocation2022.cs" />
-    <Compile Include="UPSEECUETUGAllocation2022.cs" />
-    <Compile Include="UPTACPGAllocation2022.cs" />
-    <Compile Include="UPTACArchAllocation2022.cs" />
-    <Compile Include="WBJEEMainAllocation2022.cs" />
-    <Compile Include="WBJEEAllocation2022.cs" />
-    <Compile Include="UPSEEPGAllocation.cs" />
-    <Compile Include="UPSEEUGAllocation.cs" />
+    <Compile Include="JACChandigarhAllocation2024.cs" />
     <Compile Include="TestProjAllocation.cs" />
     <Compile Include="DAL.cs" />
     <Compile Include="AbstractAllocation.cs" />

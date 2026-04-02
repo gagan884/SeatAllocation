@@ -193,5 +193,15 @@ namespace DASeatAllocation
             gbDatabase.Enabled = true;
             gbLogin.Enabled = false;
         }
+
+        private void txtUserIdDB_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtPwDDB_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

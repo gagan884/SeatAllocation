@@ -110,7 +110,7 @@ namespace BAL
                 WaitList objWaitList = default(WaitList);
 
                 WaitListNode wlMaxCandNonRetain = default(WaitListNode);
-                //AllotmentDetail objApplicantAllotmentDetail = default(AllotmentDetail);
+                AllotmentDetail objApplicantAllotmentDetail = default(AllotmentDetail);
                 WaitListNode wlCand = default(WaitListNode);
                 int candRetainStatus = 0;
                 string wlName = null;
@@ -129,12 +129,15 @@ namespace BAL
                     //objApplicantAllotmentDetail = null;
                     wlCand = null;
 
-
+                   
 
                     //Load applicant details
                     candRollNo = Applicants.Dequeue();
 
-
+                    if (candRollNo == "241250105193")
+                    {
+                        var s = candRollNo;
+                    }
 
                     if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
                     {
@@ -147,6 +150,10 @@ namespace BAL
                     //wlName = strVirtualChoice.Split(':')[0];
                     //rank = Convert.ToDouble(strVirtualChoice.Split(':')[1]);
                     wlName = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].VChoice;
+                    if (wlName == "100724.11075NN.79.G1.NCVT.HS.OP.B")
+                    {
+                        var s = candRollNo;
+                    }
                     rank = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].Rank;
 
                     if (!(Seats.ContainsKey(wlName)) || Seats[wlName] == 0)
@@ -303,9 +310,7 @@ namespace BAL
             }
             objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotment", 500);
             objSql.SaveTableUsingBulkCopy(ref dtWaitList, "XT_AllotmentSummary", 500);
-
             objSql.ExecuteProcedure("XP_UpdateAllotmentSummary");
-
             return new ActionOutput(ActionStatus.Success, "Completed");
         }
 
@@ -383,13 +388,20 @@ namespace BAL
 
             foreach (var wl in WaitListArray)
             {
+                
                 wlKeyElements = wl.Key.Split('.');
                 sequence = wl.Key.Substring(wlKeyElements[0].Length + wlKeyElements[1].Length + 2);
                 dtDereserve.Rows.Add(new object[] { iterationSeq, wlKeyElements[0], wlKeyElements[1], sequence, Seats[wl.Key], wl.Value.size(), 0, 0 });
                 foreach (WaitListNode cand in wl.Value)
                 {
+                    if (cand.rollNo == "241250100364")
+                    {
+                        var s = cand.rollNo;
+                    }
                     dtAllotment.Rows.Add(new object[] { iterationSeq, cand.rollNo, wlKeyElements[0], wlKeyElements[1], sequence, cand.rank });
                 }
+
+
             }
 
             objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotted", 500);

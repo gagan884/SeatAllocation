@@ -4,6 +4,9 @@ using AppFramework;
 using System.Data.SqlClient;
 using System.Collections.Generic;
 using System.Text;
+using System.CodeDom;
+using System.Linq;
+
 
 namespace BAL
 {
@@ -14,7 +17,7 @@ namespace BAL
         protected string DBProc_PrepareSeat = "XApp_CC_PrepareSeat";
         protected string DBProc_PrepareEligibleCandidate = "XApp_CC_PrepareEligibleCandidate";
         protected string DBProc_PreparePreviousAllotment = "XApp_CC_PreparePreviousAllotment";
-        protected string DBProc_GetCandidateChoice = "XApp_CC_GetCandidateChoice_NEETMDS";
+        protected string DBProc_GetCandidateChoice = "XApp_CC_GetCandidateChoice";
         protected string DBProc_GetSeatRankTypeMapping = "XApp_CC_GetSeatRankTypeMapping";
         protected string DBProc_GetStreamMapping = "XApp_CC_InstituteProgramStreamMaster";
         protected string DBProc_GetSeatTypeMapping = "XApp_CC_InstituteProgramSeatTypeMaster";
@@ -52,11 +55,14 @@ namespace BAL
         protected const string DBParam_CatSubcatOptionsvalue = "availableCatSubCatOption";
         protected const string DBParam_isSeatConversionAllowed = "isSeatConversionAllowed";
         protected const string DBParam_isIterationrequired = "isIterationrequired";
-        protected string boardId ;
-        protected string connectionString ;
+        protected string boardId;
+        protected string connectionString;
 
-        public ComCouns21Allocation() : base() {
-            boardId = "134172121";
+        protected string DBProc_PrepareEligibleCandidate_New = "XApp_CC_PrepareEligibleCandidate_New";
+
+        public ComCouns21Allocation() : base()
+        {
+            boardId = "125012421";
             connectionString = ObjectFactory.GetCommonObject().GetConnectionString();
         }
 
@@ -64,20 +70,20 @@ namespace BAL
         public override ActionOutput PrepareSeat()
         {
             SqlParameter[] sqlParameters = new SqlParameter[2];
-            sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, boardId);
+            sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, "125012421");
             sqlParameters[1] = new SqlParameter("@" + DBParam_RoundNo, roundNo);
             SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_PrepareSeat, sqlParameters);
             int totalSeat = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(sum(tseat),0) from XT_Seat").Tables[0].Rows[0][0]);
-            return new ActionOutput(ActionStatus.Success, "Completed:"+totalSeat.ToString());
+            return new ActionOutput(ActionStatus.Success, "Completed:" + totalSeat.ToString());
         }
 
         public override ActionOutput PrepareEligibleCandidate()
         {
             SqlParameter[] sqlParameters = new SqlParameter[2];
-            sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, boardId);
+            sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, "125012421");
             sqlParameters[1] = new SqlParameter("@" + DBParam_RoundNo, roundNo);
-            SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_PrepareEligibleCandidate, sqlParameters);
-            int eligibleCandidateCount = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_EligibleCandidate").Tables[0].Rows[0][0]);
+            SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_PrepareEligibleCandidate_New, sqlParameters);
+            int eligibleCandidateCount = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_EligibleCandidate_New").Tables[0].Rows[0][0]);
             return new ActionOutput(ActionStatus.Success, "Completed:" + eligibleCandidateCount.ToString());
         }
 
@@ -103,6 +109,8 @@ namespace BAL
             LoadGroupInfo();
             LoadQuotaInfo();
             DataTable dtAllChoices = new DataTable();
+            dtAllChoices.Columns.Add("boardid");
+            dtAllChoices.Columns.Add("roundno");
             dtAllChoices.Columns.Add("rollNo");
             dtAllChoices.Columns.Add("totalChoices");
             dtAllChoices.Columns.Add("totalVChoices");
@@ -148,6 +156,11 @@ namespace BAL
                 procOptno = 0;
                 choices.Clear();
                 candRollNo = drCand[DBParam_RollNo].ToString();
+                if (candRollNo == "241250100313")
+                {
+                    string check = "trim";
+                }
+
                 candCategory = drCand[DBParam_CandCategory].ToString();
                 candSubcategory = drCand[DBParam_CandSubcategory].ToString();
                 candGender = drCand[DBParam_CandGender].ToString();
@@ -161,9 +174,14 @@ namespace BAL
                 {
                     foreach (string s in candRankData.Split(','))
                     {
-                        if (!string.IsNullOrEmpty(s))
+                        if (!string.IsNullOrWhiteSpace(s) && s.Contains('='))
                         {
-                            candRanks.Add(s.Substring(0, 5), Convert.ToDouble(s.Substring(6)));
+                            string[] parts = s.Split('=');
+                            string key = parts[0]; // e.g., "79.14.07"
+                            if (double.TryParse(parts[1], out double value))
+                            {
+                                candRanks[key] = value;
+                            }
                         }
                     }
                 }
@@ -205,7 +223,7 @@ namespace BAL
 
                     if (isRetained == 0)
                     {
-                            isValidChoice = true;
+                        isValidChoice = true;
                     }
                     else
                     {
@@ -229,26 +247,55 @@ namespace BAL
                     }
                     if (isValidChoice)
                     {
-                        choiceStreamId = StreamInfoMaster[choiceInstCd + "." + choiceBrCd];
+                        var roll = candRollNo;
+                        choiceStreamId = "79";
+                        if (candRollNo == "241250106793")
+                        {
+                            var s = candGender;
+                        }
+
                         choiceGroupId = GroupMaster[choiceInstCd + "." + choiceBrCd];
                         choiceSeatTypeId = SeatTypeMaster[choiceInstCd + "." + choiceBrCd];
                         choiceGenderId = GenderMaster[choiceInstCd + "." + choiceBrCd];
                         choiceQuotaId = QuotaMaster[choiceInstCd + "." + choiceBrCd];
+                        string candidateGender = (candGender == "01") ? "B" : "F,B";
+                        string candidateQuota = (candDomicile == "28") ? "HS" : "OS";
+                        var choiceList = choiceGenderId.Split(',').Select(x => x.Trim()).ToList();
+                        var candidateList = candidateGender.Split(',').Select(x => x.Trim()).ToList();
+                        if (choiceList.Intersect(candidateList).Any())
+                        {
+                            choiceGenderId = candidateGender;
+                        }
+
+                        if (choiceQuotaId.Contains(candidateQuota))
+                        {
+                            choiceQuotaId = candidateQuota;
+                        }
 
                         foreach (string option in catSubCatOptions.Split(','))
                         {
-                            waitListKey = choiceInstCd + "." + choiceBrCd + "." + choiceStreamId + "." + choiceGroupId + "." + choiceSeatTypeId + "." + choiceQuotaId + "." + option + "." + choiceGenderId;
-
-                            if (SeatRankTypeMapping.ContainsKey(waitListKey) && candRanks.ContainsKey(SeatRankTypeMapping[waitListKey]))
+                            foreach (string genderId in choiceGenderId.Split(','))
                             {
-                                choiceRankType = SeatRankTypeMapping[waitListKey];
-                                rank = candRanks[choiceRankType];
-                                procOptno = procOptno + 1;
-                                choices = choices.Append(waitListKey + ":" + rank.ToString() + ",");
-                            }
-                            else
-                            {
-                                continue;
+                                foreach (string choiceQuota in choiceQuotaId.Split(','))
+                                {
+                                   
+                                    string rollToCheckHandicap = drCand[DBParam_RollNo].ToString();
+                                    waitListKey = choiceInstCd + "." + choiceBrCd + "." + choiceStreamId + "." + choiceGroupId + "." + choiceSeatTypeId + "." + choiceQuota + "." + option + "." + genderId;
+                                    bool Eligiblehandicap = true;
+                                    if (Eligiblehandicap && SeatRankTypeMapping.ContainsKey(waitListKey) && candRanks.ContainsKey("79." + SeatRankTypeMapping[waitListKey]))
+                                    {
+                                        choiceRankType = SeatRankTypeMapping[waitListKey];
+                                      
+                                        rank = candRanks["79." + choiceRankType];
+                                        procOptno = procOptno + 1;
+                                            choices = choices.Append(waitListKey + ":" + rank.ToString() + ",");
+                                    
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+                                }
                             }
                         }
                     }
@@ -256,58 +303,75 @@ namespace BAL
                 rdrChoice.Close();
                 if (procOptno > 0)
                 {
-                    dtAllChoices.Rows.Add(new object[] { drCand[DBParam_RollNo].ToString(), 0, procOptno, choices.ToString() });
+                    dtAllChoices.Rows.Add(new object[] { boardId, roundNo, drCand[DBParam_RollNo].ToString(), 0, procOptno, choices.ToString() });
                     choices.Clear();
                 }
             }
+
             connChoice.Close();
             SqlHelper.ExecuteNonQuery(connectionString, CommandType.Text, "truncate table XT_VirtualChoice");
             SqlBulkCopy bulkCopy = new SqlBulkCopy(connectionString) { DestinationTableName = "XT_VirtualChoice", BulkCopyTimeout = 350 };
             bulkCopy.WriteToServer(dtAllChoices);
-            return new ActionOutput(ActionStatus.Success, "completed:"+ dtAllChoices.Rows.Count);
+            return new ActionOutput(ActionStatus.Success, "completed:" + dtAllChoices.Rows.Count);
         }
 
-        protected virtual string GetAllotmentSequence(string rollno, string category, string subcategoryList, string gender, string domicile, string additionalInfo, string symbolList, string rankData)
+        protected virtual string GetAllotmentSequence(
+            string rollno, string category, string subcategoryList,
+            string gender, string domicile, string additionalInfo,
+            string symbolList, string rankData)
         {
-            bool isEligible = false;
-            subcategoryList = subcategoryList.ToUpper();
-            category = category.ToUpper();
+            subcategoryList = subcategoryList?.ToUpper() ?? string.Empty;
 
-            foreach (string s in symbolList.Split(','))
-            {
-                if (!string.IsNullOrEmpty(s) && s.Split('=')[1] != "N")
-                {
-                    isEligible = true;
-                    break;
-                }
-            }
+            bool isEligible = symbolList?.Split(',')
+                .Any(s => !string.IsNullOrEmpty(s) && s.Contains("=") && s.Split('=')[1] != "N") ?? false;
+
             if (!isEligible)
                 return string.Empty;
 
-            StringBuilder catSubCatOptions = new StringBuilder();
-            catSubCatOptions.Clear();
-            catSubCatOptions.Append("OP.NO,");
-            if (subcategoryList.Contains("PH:YES"))
+            category = (category?.Trim() ?? "").ToUpper();
+            var categoryMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                catSubCatOptions.Append("OP.PH,");
+                { "01", "01" }, { "SC", "01" }, { "ST", "01" }, { "15", "01" },
+                { "BC", "BC" },
+                { "03", "03" }, { "17", "03" }, { "18", "03" }, { "20", "03" },
+                { "04", "04" },
+                { "05", "05" },
+                { "06", "06" },
+                { "11", "13" }, { "12", "13" }, { "13", "13" }, { "HC", "13" },
+                { "19", "19" }
+            };
+            if (categoryMappings.TryGetValue(category, out string mappedValue))
+            {
+                category = mappedValue;
             }
+
+            var catSubCatOptions = new StringBuilder("OP,");
 
             if (category != "GN")
             {
-                catSubCatOptions.Append(category + ".NO,");
-
-                if (subcategoryList.Contains("PH:YES"))
-                {
-                    catSubCatOptions.Append(category + ".PH,");
-                }
+                catSubCatOptions.Append(category + ",");
             }
+            return catSubCatOptions.ToString().TrimEnd(',');
+        }
 
-            if (catSubCatOptions.Length > 0)
+        protected virtual bool GetEligibiltyHandiCap(string rollno, string Category, string program, string rankTypeId)
+        {
+            try
             {
-                return catSubCatOptions.ToString().Substring(0, catSubCatOptions.Length - 1);
+                SqlParameter[] sqlParameters = new SqlParameter[4];
+                sqlParameters[0] = new SqlParameter("@rollno", rollno);
+                sqlParameters[1] = new SqlParameter("@Program", program);
+                sqlParameters[2] = new SqlParameter("@rankTypeId", Convert.ToInt16(rankTypeId));
+                sqlParameters[3] = new SqlParameter("@category", Category);
+
+                object result = SqlHelper.ExecuteScalar(connectionString, CommandType.StoredProcedure, "CheckProgramEligibility", sqlParameters);
+
+                return Convert.ToBoolean(result);
             }
-            else
-                return "";
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         protected virtual string GetAllotmentSequenceFromDB(string rollno, string category, string subcategoryList, string gender, string domicile, string additionalInfo, string symbol, string rankData)
@@ -344,7 +408,8 @@ namespace BAL
             }
         }
 
-        protected Dictionary<string, string> SeatRankTypeMapping = null;
+
+      protected Dictionary<string, string> SeatRankTypeMapping = null;
         protected void LoadSeatDetails()
         {
             SeatRankTypeMapping = new Dictionary<string, string>();
@@ -529,7 +594,17 @@ namespace BAL
                 {
                     throw new Exception(string.Format("Invalid key {0}. Ranlk type not found for this key", wlKey));
                 }
-                dtAllotmentTypeTable.Rows.Add(new object[] { boardId, roundNo, dr["RollNo"].ToString(), SeatRankTypeMapping[wlKey].Substring(3), dr["rank"].ToString(), dr["instcd"].ToString(), dr["brcd"].ToString(), WLElements[0], WLElements[1], WLElements[2], WLElements[4] + WLElements[5], WLElements[3], WLElements[6] });
+                string ranktypeid = SeatRankTypeMapping[wlKey];
+                //change by joginder 
+                //string checkex = SeatRankTypeMapping[wlKey].Substring(3);
+
+                //dtAllotmentTypeTable.Rows.Add(new object[] { boardId, roundNo, dr["RollNo"].ToString(), SeatRankTypeMapping[wlKey].Substring(3), dr["rank"].ToString(), dr["instcd"].ToString(), dr["brcd"].ToString(), WLElements[0], WLElements[1], WLElements[2], WLElements[4] + WLElements[5], WLElements[3], WLElements[6] });
+                dtAllotmentTypeTable.Rows.Add(new object[] 
+                { boardId, roundNo, dr["RollNo"].ToString(), SeatRankTypeMapping[wlKey].ToString(), dr["rank"].ToString(), dr["instcd"].ToString(), dr["brcd"].ToString(),
+                    WLElements[0], WLElements[1], WLElements[2], WLElements[4] , WLElements[3], WLElements[5] });
+
+
+                // "boardId",'roundno', "rollNo","ranktypeId","rank", "instituteId","programId" ,streamId", "groupId", "seatTypeId", "allottedCat, "allottedQuota", "seatGenderId";
 
             }
 
@@ -544,20 +619,29 @@ namespace BAL
                 }
                 try
                 {
-                    dtAllotmentSummaryTypeTable.Rows.Add(new object[] { boardId, roundNo, dr["instcd"].ToString(), dr["brcd"].ToString(), WLElements[0], WLElements[1], WLElements[2], WLElements[3], WLElements[4], WLElements[5], WLElements[6],SeatRankTypeMapping[wlKey].Substring(3)
-                    ,dr["InItSeats"].ToString(),dr["NewSeats"].ToString(),dr["Allotted"].ToString(),dr["OpeningRank"].ToString(),dr["ClosingRank"].ToString(),dr["OpeningRank_NewCand"].ToString(),dr["ClosingRank_NewCand"].ToString(),dr["DereserveFrom"].ToString(),dr["DereserveTo"].ToString() });
+                    //dtAllotmentSummaryTypeTable.Rows.Add(new object[] { boardId, roundNo, dr["instcd"].ToString(), dr["brcd"].ToString(), WLElements[0], WLElements[1], WLElements[2],
+                    //WLElements[3], WLElements[4], WLElements[5], WLElements[6],SeatRankTypeMapping[wlKey].Substring(3)
+                    //,dr["InItSeats"].ToString(),dr["NewSeats"].ToString(),dr["Allotted"].ToString(),dr["OpeningRank"].ToString(),dr["ClosingRank"].ToString(),
+                    //dr["OpeningRank_NewCand"].ToString(),dr["ClosingRank_NewCand"].ToString(),dr["DereserveFrom"].ToString(),dr["DereserveTo"].ToString() });
+
+                    //change by joginder
+                    dtAllotmentSummaryTypeTable.Rows.Add(new object[] { boardId, roundNo, dr["instcd"].ToString(), dr["brcd"].ToString(), 
+
+                    WLElements[0], WLElements[1], WLElements[2], WLElements[3], WLElements[4], "", WLElements[5],
+
+                    SeatRankTypeMapping[wlKey].ToString(),dr["InItSeats"].ToString(),dr["NewSeats"].ToString(),dr["Allotted"].ToString(),dr["OpeningRank"].ToString(),
+                    dr["ClosingRank"].ToString(),dr["OpeningRank_NewCand"].ToString(),dr["ClosingRank_NewCand"].ToString(),dr["DereserveFrom"].ToString(),dr["DereserveTo"].ToString() });
+
 
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
-                
+
 
             }
         }
-
-
-
     }
 }
+

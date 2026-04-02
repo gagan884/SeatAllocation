@@ -140,7 +140,7 @@
             this.txtPwD.PasswordChar = '*';
             this.txtPwD.Size = new System.Drawing.Size(144, 21);
             this.txtPwD.TabIndex = 10;
-            this.txtPwD.Text = "Allotment@2022";
+            this.txtPwD.Text = "Test@123";
             // 
             // label4
             // 
@@ -259,7 +259,7 @@
             this.gbDatabase.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbDatabase.ForeColor = System.Drawing.Color.DarkCyan;
             this.gbDatabase.Location = new System.Drawing.Point(67, 118);
-            this.gbDatabase.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.gbDatabase.Margin = new System.Windows.Forms.Padding(10);
             this.gbDatabase.MaximumSize = new System.Drawing.Size(700, 250);
             this.gbDatabase.Name = "gbDatabase";
             this.gbDatabase.Size = new System.Drawing.Size(557, 169);
@@ -334,7 +334,8 @@
             this.txtPwDDB.PasswordChar = '*';
             this.txtPwDDB.Size = new System.Drawing.Size(144, 21);
             this.txtPwDDB.TabIndex = 4;
-            this.txtPwDDB.Text = "Html@3452";
+            this.txtPwDDB.Text = "admin!123";
+//this.txtPwDDB.TextChanged += new System.EventHandler(this.txtPwDDB_TextChanged);
             // 
             // txtUserIdDB
             // 
@@ -346,6 +347,7 @@
             this.txtUserIdDB.Size = new System.Drawing.Size(144, 21);
             this.txtUserIdDB.TabIndex = 3;
             this.txtUserIdDB.Text = "sa";
+          //  this.txtUserIdDB.TextChanged += new System.EventHandler(this.txtUserIdDB_TextChanged);
             // 
             // txtServerDB
             // 
@@ -355,7 +357,7 @@
             this.txtServerDB.Name = "txtServerDB";
             this.txtServerDB.Size = new System.Drawing.Size(144, 21);
             this.txtServerDB.TabIndex = 1;
-            this.txtServerDB.Text = "SHIVAM\\MSSQLSERVER2019";
+            this.txtServerDB.Text = "E-NIGAM01";
             // 
             // label10
             // 
@@ -377,7 +379,7 @@
             this.txtDBName.Name = "txtDBName";
             this.txtDBName.Size = new System.Drawing.Size(144, 21);
             this.txtDBName.TabIndex = 2;
-            this.txtDBName.Text = "AllotmentPOC_UAT";
+            this.txtDBName.Text = "iti2024firstresult";
             this.txtDBName.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // gbLogin
@@ -388,7 +390,7 @@
             this.gbLogin.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbLogin.ForeColor = System.Drawing.SystemColors.Desktop;
             this.gbLogin.Location = new System.Drawing.Point(67, 307);
-            this.gbLogin.Margin = new System.Windows.Forms.Padding(10, 10, 10, 10);
+            this.gbLogin.Margin = new System.Windows.Forms.Padding(10);
             this.gbLogin.MaximumSize = new System.Drawing.Size(700, 250);
             this.gbLogin.Name = "gbLogin";
             this.gbLogin.Size = new System.Drawing.Size(557, 165);

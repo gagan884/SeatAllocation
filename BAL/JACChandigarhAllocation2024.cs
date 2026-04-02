@@ -7,12 +7,12 @@ using System.Text;
 
 namespace BAL
 {
-    public class JACAllocation : ComCouns21Allocation
+    public class JACChandigarhAllocation2024 : ComCouns21Allocation
     {
-        public JACAllocation() : base()
+        public JACChandigarhAllocation2024() : base()
         {
             // board Id 
-            boardId = "113012121";
+            boardId = "113012421";
 
             //Procedure to prepare seat
             DBProc_PrepareSeat = "XApp_CC_PrepareSeat_JAC";
@@ -67,6 +67,7 @@ namespace BAL
         public override ActionOutput CreateVirtualChoice()
         {
             LoadPreviousAllotment();
+            LoadStreamInfo();
             LoadSeatDetails();
             SeatRankTypeMapping.Add("104528.00000NN.03.G1.JAC.AI.NO.K2.B", "03.01");
             DataTable dtAllChoices = new DataTable();
@@ -181,7 +182,8 @@ namespace BAL
                                 isValidChoice = (allottedOptno >= choiceOptNo && objAllAllotmentDetails[candRollNo].Instcd.Trim() == choiceInstCd);
                                 break;
                             case "FR":
-                                isValidChoice = (allottedOptno == choiceOptNo && objAllAllotmentDetails[candRollNo].Instcd.Trim() == choiceInstCd && objAllAllotmentDetails[candRollNo].Brcd.Trim() == choiceBrCd);
+                                //isValidChoice = (allottedOptno == choiceOptNo && objAllAllotmentDetails[candRollNo].Instcd.Trim() == choiceInstCd && objAllAllotmentDetails[candRollNo].Brcd.Trim() == choiceBrCd); ; ;
+                                isValidChoice = (allottedOptno == choiceOptNo);
                                 break;
                             case "RF":
                                 isValidChoice = (allottedOptno > choiceOptNo);
@@ -192,16 +194,17 @@ namespace BAL
                     }
                     if (isValidChoice)
                     {
+                        choiceStreamId = StreamInfoMaster[choiceInstCd + "." + choiceBrCd];
                         string GroupId = "G1";
                         string seatTypeId = "JAC";
 
                         foreach (string option in catSubCatOptions.Split(','))
                         {
-                            waitListKey = choiceInstCd + "." + choiceBrCd + ".03." + GroupId + "." + seatTypeId + "." + option + ".B";
+                            waitListKey = choiceInstCd + "." + choiceBrCd + "." + choiceStreamId + "." + GroupId + "." + seatTypeId + "." + option + ".B";
                             if (choiceInstCd.Equals("104528") && option.Equals("AI.NO.K2"))
                             {
                                 procOptno = procOptno + 1;
-                                choices = choices.Append("104528.00000NN.03.G1.JAC." + option + ".B:" + candRanks["03.01"].ToString() + ",");
+                                choices = choices.Append("104528.00000NN." + choiceStreamId + ".G1.JAC." + option + ".B:" + candRanks["03.01"].ToString() + ",");
                             }
                             else if (SeatRankTypeMapping.ContainsKey(waitListKey) && candRanks.ContainsKey(SeatRankTypeMapping[waitListKey]))
                             {
@@ -227,31 +230,70 @@ namespace BAL
             return new ActionOutput(ActionStatus.Success, "Completed:Choice created for" + dtAllChoices.Rows.Count + " candidates");
         }
 
-        /*
-G1  -104527
-G2  -104528
-G3  -104529,104530,104531
-         
- instId	    streamId	subcategoryId	rankTypeId
- 104527	    01	        --	            01
- 104527	    01	        D2	            02
- 104527	    01	        S2	            05
- 104528	    03	        --	            01
- 104528	    03	        D2	            03
- 104528	    03	        S2	            06
- 104529	    03	        --	            01
- 104529	    03	        D1	            04
- 104529	    03	        S1	            07
- 104530	    03	        --	            01
- 104530	    03	        D1	            04
- 104530	    03	        S1	            07
- 104531	    03	        --	            01
- 104531	    03	        D1	            04
- 104531	    03	        S1	            07
-         */
-
 
         string[] SubCatList = { "PH", "FF", "RV", "K1", "K2", "SG", "RA", "BA", "CA", "AP", "TP", "KA", "D1", "D2", "S1", "S2" };
+        //protected override string GetAllotmentSequence(string rollno, string category, string subcategoryList, string gender, string domicile, string additionalInfo, string symbolList, string rankData)
+        //{
+        //    List<KeyValuePair<string, int>> optionList = new List<KeyValuePair<string, int>>();
+        //    StringBuilder catSubCatOptions = new StringBuilder();
+        //    catSubCatOptions.Clear();
+        //    subcategoryList = subcategoryList.ToUpper();
+        //    if (subcategoryList.Contains("E1:YES")) //EW
+        //    {
+        //        catSubCatOptions.Append("AI.NO.E1,");
+        //        if (domicile == "06")
+        //            catSubCatOptions.Append("HS.NO.E1,");
+        //        else
+        //            catSubCatOptions.Append("OS.NO.E1,");
+
+        //    }
+
+        //    if (subcategoryList.Contains("E2:YES")) //EW
+        //    {
+        //        catSubCatOptions.Append("AI.NO.E2,");
+        //        if (domicile == "06")
+        //            catSubCatOptions.Append("HS.NO.E2,");
+        //        else
+        //            catSubCatOptions.Append("OS.NO.E2,");
+        //    }
+
+        //    catSubCatOptions.Append("AI.OP.NO,");
+        //    if (domicile == "06")
+        //        catSubCatOptions.Append("HS.OP.NO,");
+        //    else
+        //        catSubCatOptions.Append("OS.OP.NO,");
+
+        //    if (category != "GN")
+        //    {
+        //        catSubCatOptions.Append("AI." + category + ".NO,");
+        //        if (domicile == "06")
+        //            catSubCatOptions.Append("HS." + category + ".NO,");
+        //        else
+        //            catSubCatOptions.Append("OS." + category + ".NO,");
+        //    }
+
+        //    for (int i = 0; i < 16; i++)
+        //    {
+        //        if (subcategoryList.ToUpper().Contains(SubCatList[i].ToUpper() + ":YES"))
+        //        {
+        //            catSubCatOptions.Append("AI.NO." + SubCatList[i] + ",");
+        //            if (domicile == "06")
+        //                catSubCatOptions.Append("HS.NO." + SubCatList[i] + ",");
+        //            else
+        //                catSubCatOptions.Append("OS.NO." + SubCatList[i] + ",");
+        //        }
+        //    }
+
+
+        //    if (catSubCatOptions.Length > 0)
+        //    {
+        //        return catSubCatOptions.ToString().Substring(0, catSubCatOptions.Length - 1);
+        //    }
+        //    else
+        //        return "";
+
+        //}
+
         protected override string GetAllotmentSequence(string rollno, string category, string subcategoryList, string gender, string domicile, string additionalInfo, string symbolList, string rankData)
         {
             List<KeyValuePair<string, int>> optionList = new List<KeyValuePair<string, int>>();
@@ -261,7 +303,7 @@ G3  -104529,104530,104531
             if (subcategoryList.Contains("E1:YES")) //EW
             {
                 catSubCatOptions.Append("AI.NO.E1,");
-                if (domicile == "06")
+                if (domicile == "28")
                     catSubCatOptions.Append("HS.NO.E1,");
                 else
                     catSubCatOptions.Append("OS.NO.E1,");
@@ -271,14 +313,14 @@ G3  -104529,104530,104531
             if (subcategoryList.Contains("E2:YES")) //EW
             {
                 catSubCatOptions.Append("AI.NO.E2,");
-                if (domicile == "06")
+                if (domicile == "28")
                     catSubCatOptions.Append("HS.NO.E2,");
                 else
                     catSubCatOptions.Append("OS.NO.E2,");
             }
 
             catSubCatOptions.Append("AI.OP.NO,");
-            if (domicile == "06")
+            if (domicile == "28")
                 catSubCatOptions.Append("HS.OP.NO,");
             else
                 catSubCatOptions.Append("OS.OP.NO,");
@@ -286,7 +328,7 @@ G3  -104529,104530,104531
             if (category != "GN")
             {
                 catSubCatOptions.Append("AI." + category + ".NO,");
-                if (domicile == "06")
+                if (domicile == "28")
                     catSubCatOptions.Append("HS." + category + ".NO,");
                 else
                     catSubCatOptions.Append("OS." + category + ".NO,");
@@ -297,7 +339,7 @@ G3  -104529,104530,104531
                 if (subcategoryList.ToUpper().Contains(SubCatList[i].ToUpper() + ":YES"))
                 {
                     catSubCatOptions.Append("AI.NO." + SubCatList[i] + ",");
-                    if (domicile == "06")
+                    if (domicile == "28")
                         catSubCatOptions.Append("HS.NO." + SubCatList[i] + ",");
                     else
                         catSubCatOptions.Append("OS.NO." + SubCatList[i] + ",");
@@ -313,6 +355,8 @@ G3  -104529,104530,104531
                 return "";
 
         }
+
+
 
 
     }
