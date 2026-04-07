@@ -80,7 +80,8 @@ namespace DASeatAllocation
 
         private void btnVirtualChoice_Click(object sender, EventArgs e)
         {
-            objResponse = objAllocation.CreateVirtualChoice();
+            objResponse = objAllocation.VirtualCreationNew();
+            // objResponse = objAllocation.CreateVirtualChoice();
             if (objResponse.resultType == ActionStatus.Success)
                 lblMessage.Text = "Virtual choice created";
             else

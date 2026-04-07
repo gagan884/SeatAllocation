@@ -26,6 +26,7 @@ namespace BAL
         #region InputPreparation     
         public abstract ActionOutput PrepareSeat();
         public abstract ActionOutput PrepareEligibleCandidate();
+        public abstract ActionOutput VirtualCreationNew();
         public abstract ActionOutput PreparePreviousAllotment();
         #endregion InputPreparation
 
@@ -78,7 +79,7 @@ namespace BAL
         public ActionOutput AllotSeat()
         {
             PreAllotmentProcessing();
-            DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice");
+            DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice_Test");
             LoadPreviousAllotment();
             LoadVirtualChoice();
             bool isIterationRequired = true;
@@ -259,7 +260,7 @@ namespace BAL
                 foreach (WaitListNode x in SameRankCandidates)
                 {
                     objWaitList.Enqueue(x);
-                }
+            }
             }
 
         }

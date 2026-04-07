@@ -22,6 +22,7 @@ namespace AppFramework
         DataSet GetCandidateDetails(string rollno);
         ActionOutput GetAllotmentOverview(int roundNo);
         ActionOutput UnloadAllocation();
+        ActionOutput VirtualCreationNew();
         void SetRoundNo(int roundno);
 
     }

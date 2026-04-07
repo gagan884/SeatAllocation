@@ -58,7 +58,8 @@ namespace BAL
         protected string boardId;
         protected string connectionString;
 
-        protected string DBProc_PrepareEligibleCandidate_New = "XApp_CC_PrepareEligibleCandidate_New";
+        protected string DBProc_PrepareEligibleCandidate_New = "XApp_CC_PrepareEligibleCandidate";
+        protected string DBProc_Virtual_Creation = "Virtual_Creation_New";
 
         public ComCouns21Allocation() : base()
         {
@@ -83,7 +84,7 @@ namespace BAL
             sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, "125012421");
             sqlParameters[1] = new SqlParameter("@" + DBParam_RoundNo, roundNo);
             SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_PrepareEligibleCandidate_New, sqlParameters);
-            int eligibleCandidateCount = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_EligibleCandidate_New").Tables[0].Rows[0][0]);
+            int eligibleCandidateCount = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_EligibleCandidate").Tables[0].Rows[0][0]);
             return new ActionOutput(ActionStatus.Success, "Completed:" + eligibleCandidateCount.ToString());
         }
 
@@ -95,6 +96,17 @@ namespace BAL
             SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_PreparePreviousAllotment, sqlParameters);
             int previousAllotment = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_PreviousAllotment").Tables[0].Rows[0][0]);
             return new ActionOutput(ActionStatus.Success, "Completed:" + previousAllotment.ToString());
+        }
+
+        public override ActionOutput VirtualCreationNew()
+        {
+            LoadSeatDetails();
+            SqlParameter[] sqlParameters = new SqlParameter[2];
+            sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, boardId);
+            sqlParameters[1] = new SqlParameter("@" + DBParam_RoundNo, roundNo);
+            SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_Virtual_Creation, sqlParameters);
+            //int previousAllotment = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_PreviousAllotment").Tables[0].Rows[0][0]);
+            return new ActionOutput(ActionStatus.Success, "Completed:");
         }
 
         #endregion InputPreparation
@@ -168,10 +180,18 @@ namespace BAL
                 candAdditionalInfo = drCand[DBParam_CandAddionalInfo].ToString();
                 candSymbolData = drCand[DBParam_CandSymbol].ToString();
                 candRankData = drCand[DBParam_CandRank].ToString();
+                //candRankData = drCand[DBParam_RankType].ToString();
                 candWillingness = drCand[DBParam_CandWiilingness].ToString();
                 candRanks = new Dictionary<string, double>();
                 try
                 {
+                    //foreach (string s in candRankData.Split(','))
+                    //{
+                    //    if (!string.IsNullOrEmpty(s))
+                    //    {
+                    //        candRanks.Add(s.Substring(0, 5), Convert.ToDouble(s.Substring(6)));
+                    //    }
+                    //}
                     foreach (string s in candRankData.Split(','))
                     {
                         if (!string.IsNullOrWhiteSpace(s) && s.Contains('='))
@@ -248,18 +268,34 @@ namespace BAL
                     if (isValidChoice)
                     {
                         var roll = candRollNo;
+                        // choiceStreamId = StreamInfoMaster[choiceInstCd + "." + choiceBrCd];
                         choiceStreamId = "79";
+                        // var G = candGender;
                         if (candRollNo == "241250106793")
                         {
                             var s = candGender;
                         }
+                        //var d = candDomicile;
 
                         choiceGroupId = GroupMaster[choiceInstCd + "." + choiceBrCd];
                         choiceSeatTypeId = SeatTypeMaster[choiceInstCd + "." + choiceBrCd];
                         choiceGenderId = GenderMaster[choiceInstCd + "." + choiceBrCd];
                         choiceQuotaId = QuotaMaster[choiceInstCd + "." + choiceBrCd];
+
+                        // Author: Joginder
+                        // Description: Determines the candidate's gender and quota based on given conditions and updates selection accordingly.
+
+                        // Determine candidate's gender based on gender code
                         string candidateGender = (candGender == "01") ? "B" : "F,B";
+
+                        // Determine candidate's quota based on domicile code
                         string candidateQuota = (candDomicile == "28") ? "HS" : "OS";
+
+                        // Update selected gender if the choiceGenderId contains the determined gender
+                        //if (choiceGenderId.Contains(candidateGender))
+                        //{
+                        //    choiceGenderId = candidateGender;
+                        //}
                         var choiceList = choiceGenderId.Split(',').Select(x => x.Trim()).ToList();
                         var candidateList = candidateGender.Split(',').Select(x => x.Trim()).ToList();
                         if (choiceList.Intersect(candidateList).Any())
@@ -267,6 +303,7 @@ namespace BAL
                             choiceGenderId = candidateGender;
                         }
 
+                        // Update selected quota if the choiceQuotaId contains the determined quota
                         if (choiceQuotaId.Contains(candidateQuota))
                         {
                             choiceQuotaId = candidateQuota;
@@ -278,18 +315,38 @@ namespace BAL
                             {
                                 foreach (string choiceQuota in choiceQuotaId.Split(','))
                                 {
-                                   
+
                                     string rollToCheckHandicap = drCand[DBParam_RollNo].ToString();
                                     waitListKey = choiceInstCd + "." + choiceBrCd + "." + choiceStreamId + "." + choiceGroupId + "." + choiceSeatTypeId + "." + choiceQuota + "." + option + "." + genderId;
+                                    //change by joginder in the code to check the eligibility of handicap candidates.
+                                    //bool Eligiblehandicap = GetEligibiltyHandiCap(rollToCheckHandicap, option, choiceBrCd, rank);
                                     bool Eligiblehandicap = true;
                                     if (Eligiblehandicap && SeatRankTypeMapping.ContainsKey(waitListKey) && candRanks.ContainsKey("79." + SeatRankTypeMapping[waitListKey]))
                                     {
                                         choiceRankType = SeatRankTypeMapping[waitListKey];
-                                      
+                                        //Eligiblehandicap = GetEligibiltyHandiCap(rollToCheckHandicap, option, choiceBrCd, choiceRankType);
+
+                                        //if (Eligiblehandicap)
+
+                                        //{
+                                        // joginder changes according sports ranks
+                                        //if (option == "08" || option == "07" || option == "09" || option == "10")
+                                        //{
+                                        //    rank = candRanks["79." + choiceRankType + "." + option];
+
+                                        //}
+                                        //else
+                                        //{
+                                            rank = candRanks["79." + choiceRankType];
+                                       // }
                                         rank = candRanks["79." + choiceRankType];
                                         procOptno = procOptno + 1;
-                                            choices = choices.Append(waitListKey + ":" + rank.ToString() + ",");
-                                    
+                                        choices = choices.Append(waitListKey + ":" + rank.ToString() + ",");
+                                        // }
+                                        //else
+                                        //{
+                                        //    continue;
+                                        //}
                                     }
                                     else
                                     {
