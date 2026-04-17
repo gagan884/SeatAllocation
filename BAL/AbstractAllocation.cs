@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Configuration;
 using System.Text;
+using System.Xml.Linq;
 
 namespace BAL
 {
@@ -76,159 +77,159 @@ namespace BAL
         DataTable dtSeats;
         Dictionary<string, Int16> PIList = default(Dictionary<string, Int16>);
         Queue<string> Applicants = default(Queue<string>);
-        public ActionOutput AllotSeat()
-        {
-            PreAllotmentProcessing();
-            DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice_Test");
-            LoadPreviousAllotment();
-            LoadVirtualChoice();
-            bool isIterationRequired = true;
-            string strVirtualChoice = "";
-            int iterationSeq = 1;
-            while (isIterationRequired)
-            {
-                //Seat Preparation
-                dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
-                Seats = new Dictionary<string, int>();
-                WaitListArray = new Dictionary<string, WaitList>(dtSeats.Rows.Count);
-                foreach (DataRow dr in dtSeats.Rows)
-                {
-                    Seats.Add(dr["WLKey"].ToString(), Convert.ToInt32(dr["TSeat"].ToString()));
-                    WaitListArray.Add(dr["WLKey"].ToString(), new WaitList());
-                }
+        //public ActionOutput AllotSeat()
+        //{
+        //    PreAllotmentProcessing();
+        //    DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice_Test");
+        //    LoadPreviousAllotment();
+        //    LoadVirtualChoice();
+        //    bool isIterationRequired = true;
+        //    string strVirtualChoice = "";
+        //    int iterationSeq = 1;
+        //    while (isIterationRequired)
+        //    {
+        //        //Seat Preparation
+        //        dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
+        //        Seats = new Dictionary<string, int>();
+        //        WaitListArray = new Dictionary<string, WaitList>(dtSeats.Rows.Count);
+        //        foreach (DataRow dr in dtSeats.Rows)
+        //        {
+        //            Seats.Add(dr["WLKey"].ToString(), Convert.ToInt32(dr["TSeat"].ToString()));
+        //            WaitListArray.Add(dr["WLKey"].ToString(), new WaitList());
+        //        }
 
-                //Applicant Queue preparation
-                PIList = new Dictionary<string, short>(dtEligibleCandidates.Rows.Count);
-                Applicants = new Queue<string>(dtEligibleCandidates.Rows.Count);
-                foreach (DataRow dr in dtEligibleCandidates.Rows)
-                {
-                    Applicants.Enqueue(dr["RollNo"].ToString());
-                    PIList.Add(dr["RollNo"].ToString(), 1);
-                }
+        //        //Applicant Queue preparation
+        //        PIList = new Dictionary<string, short>(dtEligibleCandidates.Rows.Count);
+        //        Applicants = new Queue<string>(dtEligibleCandidates.Rows.Count);
+        //        foreach (DataRow dr in dtEligibleCandidates.Rows)
+        //        {
+        //            Applicants.Enqueue(dr["RollNo"].ToString());
+        //            PIList.Add(dr["RollNo"].ToString(), 1);
+        //        }
 
-                //Reset temprary fields
-                string candRollNo = "";
-                WaitList objWaitList = default(WaitList);
+        //        //Reset temprary fields
+        //        string candRollNo = "";
+        //        WaitList objWaitList = default(WaitList);
 
-                WaitListNode wlMaxCandNonRetain = default(WaitListNode);
-                AllotmentDetail objApplicantAllotmentDetail = default(AllotmentDetail);
-                WaitListNode wlCand = default(WaitListNode);
-                int candRetainStatus = 0;
-                string wlName = null;
-                double rank = 0, maxRank = 0;
-
-                while (Applicants.Count > 0)
-                {
-                    //Reset fields for each applicant
-                    candRollNo = "";
-                    strVirtualChoice = "";
-                    wlName = null;
-                    rank = 0;
-                    objWaitList = null;
-                    candRetainStatus = 0;
-                    wlMaxCandNonRetain = null;
-                    //objApplicantAllotmentDetail = null;
-                    wlCand = null;
+        //        WaitListNode wlMaxCandNonRetain = default(WaitListNode);
+        //        AllotmentDetail objApplicantAllotmentDetail = default(AllotmentDetail);
+        //        WaitListNode wlCand = default(WaitListNode);
+        //        int candRetainStatus = 0;
+        //        string wlName = null;
+        //        double rank = 0, maxRank = 0;
+                
+        //        while (Applicants.Count > 0)
+        //        {
+        //            //Reset fields for each applicant
+        //            candRollNo = "";
+        //            strVirtualChoice = "";
+        //            wlName = null;
+        //            rank = 0;
+        //            objWaitList = null;
+        //            candRetainStatus = 0;
+        //            wlMaxCandNonRetain = null;
+        //            //objApplicantAllotmentDetail = null;
+        //            wlCand = null;
 
                    
 
-                    //Load applicant details
-                    candRollNo = Applicants.Dequeue();
+        //            //Load applicant details
+        //            candRollNo = Applicants.Dequeue();
 
-                    if (candRollNo == "241250105193")
-                    {
-                        var s = candRollNo;
-                    }
+        //            if (candRollNo == "241250105193")
+        //            {
+        //                var s = candRollNo;
+        //            }
 
-                    if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
-                    {
-                        RejectCandidate(candRollNo);
-                        continue;
-                    }
+        //            if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
+        //            {
+        //                RejectCandidate(candRollNo);
+        //                continue;
+        //            }
 
-                    //strVirtualChoice = AllChoices[candRollNo].VChoiceWithRank.Split(',')[PIList[candRollNo] - 1];
-                    //strVirtualChoice.Substring(0, strVirtualChoice.Length - 1);
-                    //wlName = strVirtualChoice.Split(':')[0];
-                    //rank = Convert.ToDouble(strVirtualChoice.Split(':')[1]);
-                    wlName = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].VChoice;
-                    if (wlName == "100724.11075NN.79.G1.NCVT.HS.OP.B")
-                    {
-                        var s = candRollNo;
-                    }
-                    rank = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].Rank;
+        //            //strVirtualChoice = AllChoices[candRollNo].VChoiceWithRank.Split(',')[PIList[candRollNo] - 1];
+        //            //strVirtualChoice.Substring(0, strVirtualChoice.Length - 1);
+        //            //wlName = strVirtualChoice.Split(':')[0];
+        //            //rank = Convert.ToDouble(strVirtualChoice.Split(':')[1]);
+        //            wlName = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].VChoice;
+        //            if (wlName == "100724.11075NN.79.G1.NCVT.HS.OP.B")
+        //            {
+        //                var s = candRollNo;
+        //            }
+        //            rank = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].Rank;
 
-                    if (!(Seats.ContainsKey(wlName)) || Seats[wlName] == 0)
-                    {
-                        RejectCandidate(candRollNo);
-                        continue;
-                    }
-
-
-
-
-                    if ((WaitListArray.ContainsKey(wlName)))
-                    {
-                        objWaitList = WaitListArray[wlName];
-                    }
-                    else
-                    {
-                        RejectCandidate(candRollNo);
-                        continue;
-                    }
+        //            if (!(Seats.ContainsKey(wlName)) || Seats[wlName] == 0)
+        //            {
+        //                RejectCandidate(candRollNo);
+        //                continue;
+        //            }
 
 
 
-                    candRetainStatus = 0;
-                    if (objAllAllotmentDetails != null && objAllAllotmentDetails.ContainsKey(candRollNo) && wlName == (objAllAllotmentDetails[candRollNo].Instcd + "." + objAllAllotmentDetails[candRollNo].Brcd + "." + objAllAllotmentDetails[candRollNo].Sequence))
-                    {
-                        candRetainStatus = objAllAllotmentDetails[candRollNo].IsRetained;
-                    }
 
-
-                    if (objWaitList.size() < Seats[wlName])
-                    {
-                        objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
-                        continue;
-                    }
-
-
-                    maxRank = 0;
-                    if (!objWaitList.isEmpty())
-                    {
-                        maxRank = objWaitList.GetMaxRank();
-                    }
+        //            if ((WaitListArray.ContainsKey(wlName)))
+        //            {
+        //                objWaitList = WaitListArray[wlName];
+        //            }
+        //            else
+        //            {
+        //                RejectCandidate(candRollNo);
+        //                continue;
+        //            }
 
 
 
-                    if (candRetainStatus == 1)
-                    {
-                        if (maxRank > 0)
-                        {
-                            RemoveAndReject(ref objWaitList, wlName, maxRank);
-                        }
-                        objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
-                        continue;
-                    }
-                    else
-                    {
-                        if (maxRank > 0 && rank <= maxRank)
-                        {
-                            objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
-                            RemoveAndReject(ref objWaitList, wlName, rank > maxRank ? rank : maxRank);
-                        }
-                        else
-                        {
-                            RejectCandidate(candRollNo);
-                        }
-                    }
-                }
-                SaveIterationResult(iterationSeq);
-                isIterationRequired = DereserveSeat(iterationSeq);
-                iterationSeq++;
-            }
+        //            candRetainStatus = 0;
+        //            if (objAllAllotmentDetails != null && objAllAllotmentDetails.ContainsKey(candRollNo) && wlName == (objAllAllotmentDetails[candRollNo].Instcd + "." + objAllAllotmentDetails[candRollNo].Brcd + "." + objAllAllotmentDetails[candRollNo].Sequence))
+        //            {
+        //                candRetainStatus = objAllAllotmentDetails[candRollNo].IsRetained;
+        //            }
 
-            return new ActionOutput(ActionStatus.Success, "");
-        }
+
+        //            if (objWaitList.size() < Seats[wlName])
+        //            {
+        //                objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                continue;
+        //            }
+
+
+        //            maxRank = 0;
+        //            if (!objWaitList.isEmpty())
+        //            {
+        //                maxRank = objWaitList.GetMaxRank();
+        //            }
+
+
+
+        //            if (candRetainStatus == 1)
+        //            {
+        //                if (maxRank > 0)
+        //                {
+        //                    RemoveAndReject(ref objWaitList, wlName, maxRank);
+        //                }
+        //                objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                continue;
+        //            }
+        //            else
+        //            {
+        //                if (maxRank > 0 && rank <= maxRank)
+        //                {
+        //                    objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                    RemoveAndReject(ref objWaitList, wlName, rank > maxRank ? rank : maxRank);
+        //                    }
+        //                else
+        //                {
+        //                    RejectCandidate(candRollNo);
+        //                }
+        //            }
+        //        }
+        //        SaveIterationResult(iterationSeq);
+        //        isIterationRequired = DereserveSeat(iterationSeq);
+        //        iterationSeq++;
+        //    }
+
+        //    return new ActionOutput(ActionStatus.Success, "");
+        //}
 
         private void RejectCandidate(string candRollno)
         {
@@ -240,30 +241,30 @@ namespace BAL
         }
 
         List<WaitListNode> SameRankCandidates = new List<WaitListNode>();
-        private void RemoveAndReject(ref WaitList objWaitList, string wlName, double rank)
-        {
-            int filledSeats = objWaitList.size(); ;
-            int SeatCapacity = Seats[wlName];
+        //private void RemoveAndReject(ref WaitList objWaitList, string wlName, double rank)
+        //{
+        //    int filledSeats = objWaitList.size(); ;
+        //    int SeatCapacity = Seats[wlName];
 
-            SameRankCandidates.Clear();
-            while (!objWaitList.isEmpty() && objWaitList.GetMaxRank() == rank)
-                SameRankCandidates.Add(objWaitList.dequeue());
+        //    SameRankCandidates.Clear();
+        //    while (!objWaitList.isEmpty() && objWaitList.GetMaxRank() == rank)
+        //        SameRankCandidates.Add(objWaitList.dequeue());
 
 
-            if (filledSeats >= SeatCapacity)
-            {
-                foreach (WaitListNode x in SameRankCandidates)
-                    RejectCandidate(x.rollNo);
-            }
-            else
-            {
-                foreach (WaitListNode x in SameRankCandidates)
-                {
-                    objWaitList.Enqueue(x);
-            }
-            }
+        //    if (filledSeats >= SeatCapacity)
+        //    {
+        //        foreach (WaitListNode x in SameRankCandidates)
+        //            RejectCandidate(x.rollNo);
+        //    }
+        //    else
+        //    {
+        //        foreach (WaitListNode x in SameRankCandidates)
+        //        {
+        //            objWaitList.Enqueue(x);
+        //        }
+        //    }
 
-        }
+        //}
 
         public ActionOutput PreAllotmentProcessing()
         {
@@ -363,61 +364,64 @@ namespace BAL
         }
 
 
-        public void SaveIterationResult(int iterationSeq)
-        {
-            string sequence = string.Empty;
-            string[] wlKeyElements = null;
-            //Save into Seat Dereserve
-            DataTable dtDereserve = new DataTable();
-            dtDereserve.Columns.Add("IterationNo");
-            dtDereserve.Columns.Add("Instcd");
-            dtDereserve.Columns.Add("Brcd");
-            dtDereserve.Columns.Add("Sequence");
-            dtDereserve.Columns.Add("Seats");
-            dtDereserve.Columns.Add("Allotted");
-            dtDereserve.Columns.Add("DereserveFrom");
-            dtDereserve.Columns.Add("DereserveTo");
+        //public void SaveIterationResult(int iterationSeq)
+        //{
+        //    string sequence = string.Empty;
+        //    string[] wlKeyElements = null;
+        //    //Save into Seat Dereserve
+        //    DataTable dtDereserve = new DataTable();
+        //    dtDereserve.Columns.Add("IterationNo");
+        //    dtDereserve.Columns.Add("Instcd");
+        //    dtDereserve.Columns.Add("Brcd");
+        //    dtDereserve.Columns.Add("Sequence");
+        //    dtDereserve.Columns.Add("Seats");
+        //    dtDereserve.Columns.Add("Allotted");
+        //    dtDereserve.Columns.Add("DereserveFrom");
+        //    dtDereserve.Columns.Add("DereserveTo");
 
-            //Save Allotment
-            DataTable dtAllotment = new DataTable();
-            dtAllotment.Columns.Add("IterationNo");
-            dtAllotment.Columns.Add("RollNo");
-            dtAllotment.Columns.Add("Instcd");
-            dtAllotment.Columns.Add("Brcd");
-            dtAllotment.Columns.Add("Sequence");
-            dtAllotment.Columns.Add("Rank");
+        //    //Save Allotment
+        //    DataTable dtAllotment = new DataTable();
+        //    dtAllotment.Columns.Add("IterationNo");
+        //    dtAllotment.Columns.Add("RollNo");
+        //    dtAllotment.Columns.Add("Instcd");
+        //    dtAllotment.Columns.Add("Brcd");
+        //    dtAllotment.Columns.Add("Sequence");
+        //    dtAllotment.Columns.Add("Rank");
 
-            foreach (var wl in WaitListArray)
-            {
+        //    foreach (var wl in WaitListArray)
+        //    {
                 
-                wlKeyElements = wl.Key.Split('.');
-                sequence = wl.Key.Substring(wlKeyElements[0].Length + wlKeyElements[1].Length + 2);
-                dtDereserve.Rows.Add(new object[] { iterationSeq, wlKeyElements[0], wlKeyElements[1], sequence, Seats[wl.Key], wl.Value.size(), 0, 0 });
-                foreach (WaitListNode cand in wl.Value)
-                {
-                    if (cand.rollNo == "241250100364")
-                    {
-                        var s = cand.rollNo;
-                    }
-                    dtAllotment.Rows.Add(new object[] { iterationSeq, cand.rollNo, wlKeyElements[0], wlKeyElements[1], sequence, cand.rank });
-                }
+        //        wlKeyElements = wl.Key.Split('.');
+        //        sequence = wl.Key.Substring(wlKeyElements[0].Length + wlKeyElements[1].Length + 2);
+        //        dtDereserve.Rows.Add(new object[] { iterationSeq, wlKeyElements[0], wlKeyElements[1], sequence, Seats[wl.Key], wl.Value.size(), 0, 0 });
+        //        foreach (WaitListNode cand in wl.Value)
+        //        {
+        //            if (cand.rollNo == "241250100364")
+        //            {
+        //                var s = cand.rollNo;
+        //            }
+        //            dtAllotment.Rows.Add(new object[] { iterationSeq, cand.rollNo, wlKeyElements[0], wlKeyElements[1], sequence, cand.rank });
+        //        }
 
 
-            }
+        //    }
 
-            objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotted", 500);
-            dtAllotment.Clear();
-            dtAllotment = null;
+        //    objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotted", 500);
+        //    dtAllotment.Clear();
+        //    dtAllotment = null;
 
-            objSql.SaveTableUsingBulkCopy(ref dtDereserve, "XT_Dereserve", 500);
-            dtDereserve.Clear();
-            dtDereserve = null;
+        //    objSql.SaveTableUsingBulkCopy(ref dtDereserve, "XT_Dereserve", 500);
+        //    dtDereserve.Clear();
+        //    dtDereserve = null;
 
-            objSql.ExecuteCommand("update A Set A.tSeat=B.Seats,A.aSeat=B.Allotted,A.bSeat=B.Seats-B.Allotted From XT_PSeat A inner join XT_Dereserve B on A.Instcd=B.Instcd and a.Brcd=B.Brcd and A.Sequence=B.Sequence and B.IterationNo=(select max(IterationNo) from XT_Dereserve) ");
-        }
+        //    objSql.ExecuteCommand("update A Set A.tSeat=B.Seats,A.aSeat=B.Allotted,A.bSeat=B.Seats-B.Allotted From XT_PSeat A inner join XT_Dereserve B on A.Instcd=B.Instcd and a.Brcd=B.Brcd and A.Sequence=B.Sequence and B.IterationNo=(select max(IterationNo) from XT_Dereserve) ");
+        //}
         #endregion SeatAllocation
 
         protected Dictionary<string, AllotmentDetail> objAllAllotmentDetails = default(Dictionary<string, AllotmentDetail>);
+
+        public Dictionary<string, string> FinalAllotment = default(Dictionary<string, string>);
+
         public void LoadPreviousAllotment()
         {
             string connectionString = ObjectFactory.GetCommonObject().GetConnectionString();
@@ -627,6 +631,814 @@ group by A.Sequence order by A.Sequence").Rows)
 
 
             return new ActionOutput(ActionStatus.Success, "Completed", txt.ToString(), DataType.HTML);
+        }
+
+        //public ActionOutput AllotSeatNew()
+        //{
+        //    PreAllotmentProcessing();
+
+        //    DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice_Test");
+
+        //    LoadPreviousAllotment();
+        //    LoadVirtualChoice();
+
+        //    Dictionary<string, string> CurrentAllotment = new Dictionary<string, string>();
+
+        //    if (objAllAllotmentDetails != null)
+        //    {
+        //        foreach (var item in objAllAllotmentDetails)
+        //        {
+        //            string wl = item.Value.Instcd + "." + item.Value.Brcd + "." + item.Value.Sequence;
+        //            CurrentAllotment[item.Key] = wl;
+        //        }
+        //    }
+
+        //    HashSet<string> UpgradedCandidates = new HashSet<string>();
+        //    Dictionary<string, int> PrevIterationVacancy = new Dictionary<string, int>();
+
+        //    bool isIterationRequired = true;
+        //    int iterationSeq = 1;
+        //    int maxIteration = 10; 
+
+        //    while (isIterationRequired && iterationSeq <= maxIteration)
+        //    {
+        //        Dictionary<string, int> VacatedSeats = new Dictionary<string, int>();
+        //        HashSet<string> UpgradedThisIteration = new HashSet<string>();
+        //        bool anyUpgradeHappened = false;
+
+        //        dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
+
+        //        Seats = new Dictionary<string, int>();
+        //        WaitListArray = new Dictionary<string, WaitList>(dtSeats.Rows.Count);
+
+        //        foreach (DataRow dr in dtSeats.Rows)
+        //        {
+        //            string wlKey = dr["WLKey"].ToString();
+        //            int seatCount = Convert.ToInt32(dr["TSeat"]);
+
+        //            if (PrevIterationVacancy.ContainsKey(wlKey))
+        //                seatCount += PrevIterationVacancy[wlKey];
+
+        //            Seats.Add(wlKey, seatCount);
+        //            WaitListArray.Add(wlKey, new WaitList());
+        //        }
+        //        PIList = new Dictionary<string, short>(dtEligibleCandidates.Rows.Count);
+        //        Applicants = new Queue<string>(dtEligibleCandidates.Rows.Count);
+
+        //        foreach (DataRow dr in dtEligibleCandidates.Rows)
+        //        {
+        //            Applicants.Enqueue(dr["RollNo"].ToString());
+        //            PIList.Add(dr["RollNo"].ToString(), 1);
+        //        }
+
+        //        string candRollNo = "";
+        //        WaitList objWaitList = null;
+
+        //        while (Applicants.Count > 0)
+        //        {
+        //            candRollNo = Applicants.Dequeue();
+
+        //            if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
+        //            {
+        //                RejectCandidate(candRollNo);
+        //                continue;
+        //            }
+
+        //            string wlName = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].VChoice;
+        //            double rank = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].Rank;
+
+        //            if (!(Seats.ContainsKey(wlName)) || Seats[wlName] == 0)
+        //            {
+        //                RejectCandidate(candRollNo);
+        //                continue;
+        //            }
+
+        //            if (!WaitListArray.ContainsKey(wlName))
+        //            {
+        //                RejectCandidate(candRollNo);
+        //                continue;
+        //            }
+
+        //            objWaitList = WaitListArray[wlName];
+
+        //            string oldWL = CurrentAllotment.ContainsKey(candRollNo) ? CurrentAllotment[candRollNo] : null;
+
+        //            int candRetainStatus = 0;
+        //            if (objAllAllotmentDetails != null && objAllAllotmentDetails.ContainsKey(candRollNo))
+        //            {
+        //                candRetainStatus = objAllAllotmentDetails[candRollNo].IsRetained;
+        //            }
+
+        //            bool isAllotted = false;
+
+        //            if (objWaitList.size() < Seats[wlName])
+        //            {
+        //                objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                isAllotted = true;
+        //            }
+        //            else
+        //            {
+        //                double maxRank = 0;
+        //                if (!objWaitList.isEmpty())
+        //                {
+        //                    maxRank = objWaitList.GetMaxRank();
+        //                }
+
+        //                if (candRetainStatus == 1)
+        //                {
+        //                    if (maxRank > 0)
+        //                    {
+        //                        RemoveAndReject(ref objWaitList, wlName, maxRank);
+        //                    }
+
+        //                    objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                    isAllotted = true;
+        //                }
+        //                else
+        //                {
+        //                    if (maxRank > 0 && rank <= maxRank)
+        //                    {
+        //                        objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                        RemoveAndReject(ref objWaitList, wlName, maxRank);
+        //                        isAllotted = true;
+        //                    }
+        //                    else
+        //                    {
+        //                        RejectCandidate(candRollNo);
+        //                    }
+        //                }
+        //            }
+
+        //            if (isAllotted)
+        //            {
+        //                if (!string.IsNullOrEmpty(oldWL) && oldWL != wlName)
+        //                {
+        //                    if (!UpgradedThisIteration.Contains(candRollNo))
+        //                    {
+        //                        UpgradedThisIteration.Add(candRollNo);
+
+        //                        if (VacatedSeats.ContainsKey(oldWL))
+        //                            VacatedSeats[oldWL]++;
+        //                        else
+        //                            VacatedSeats.Add(oldWL, 1);
+
+        //                        anyUpgradeHappened = true;
+        //                    }
+        //                }
+
+        //                CurrentAllotment[candRollNo] = wlName;
+        //            }
+        //        }
+        //        PrevIterationVacancy = VacatedSeats;
+        //        isIterationRequired = anyUpgradeHappened;
+
+        //        iterationSeq++;
+        //    }
+
+        //SaveFinalResultNew();
+
+        //    return new ActionOutput(ActionStatus.Success, "");
+        //}
+
+        //public ActionOutput AllotSeatNew()
+        //{
+        //    PreAllotmentProcessing();
+
+        //    DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice_Test");
+
+        //    LoadPreviousAllotment();
+        //    LoadVirtualChoice();
+
+        //    Dictionary<string, string> CurrentAllotment = new Dictionary<string, string>();
+
+        //    if (objAllAllotmentDetails != null)
+        //    {
+        //        foreach (var item in objAllAllotmentDetails)
+        //        {
+        //            string wl = item.Value.Instcd + "." + item.Value.Brcd + "." + item.Value.Sequence;
+        //            CurrentAllotment[item.Key] = wl;
+        //        }
+        //    }
+
+        //    bool isIterationRequired = true;
+        //    int iterationSeq = 1;
+        //    int maxIteration = 10;
+
+        //    while (isIterationRequired && iterationSeq <= maxIteration)
+        //    {
+        //        bool anyUpgradeHappened = false;
+
+        //        dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
+
+        //        Seats = new Dictionary<string, int>();
+        //        WaitListArray = new Dictionary<string, WaitList>(dtSeats.Rows.Count);
+
+        //        foreach (DataRow dr in dtSeats.Rows)
+        //        {
+        //            string wlKey = dr["WLKey"].ToString();
+        //            int seatCount = Convert.ToInt32(dr["TSeat"]);
+
+        //            Seats[wlKey] = seatCount;
+        //            WaitListArray[wlKey] = new WaitList();
+        //        }
+
+        //        PIList = new Dictionary<string, short>(dtEligibleCandidates.Rows.Count);
+        //        Applicants = new Queue<string>(dtEligibleCandidates.Rows.Count);
+
+        //        foreach (DataRow dr in dtEligibleCandidates.Rows)
+        //        {
+        //            string roll = dr["RollNo"].ToString();
+        //            Applicants.Enqueue(roll);
+        //            PIList[roll] = 1;
+        //        }
+
+        //        while (Applicants.Count > 0)
+        //        {
+        //            string candRollNo = Applicants.Dequeue();
+
+        //            if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
+        //                continue;
+
+        //            if (PIList[candRollNo] > AllChoices[candRollNo].VChoiceCount)
+        //                continue;
+
+        //            string wlName = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].VChoice;
+        //            double rank = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].Rank;
+
+        //            if (Seats[wlName] <= 0)
+        //            {
+        //                PIList[candRollNo]++;
+        //                Applicants.Enqueue(candRollNo);
+        //                continue;
+        //            }
+
+        //            WaitList objWaitList = WaitListArray[wlName];
+
+        //            string oldWL = CurrentAllotment.ContainsKey(candRollNo) ? CurrentAllotment[candRollNo] : null;
+
+        //            int candRetainStatus = 0;
+        //            if (objAllAllotmentDetails != null && objAllAllotmentDetails.ContainsKey(candRollNo))
+        //                candRetainStatus = objAllAllotmentDetails[candRollNo].IsRetained;
+
+        //            bool isAllotted = false;
+
+        //            if (objWaitList.size() < Seats[wlName])
+        //            {
+        //                objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                isAllotted = true;
+        //            }
+        //            else
+        //            {
+        //                double maxRank = objWaitList.isEmpty() ? double.MaxValue : objWaitList.GetMaxRank();
+
+        //                if (candRetainStatus == 1)
+        //                {
+        //                    if (!objWaitList.isEmpty())
+        //                        RemoveAndReject(ref objWaitList, wlName, objWaitList.GetMaxRank());
+
+        //                    objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                    isAllotted = true;
+        //                }
+        //                else
+        //                {
+        //                    if (rank <= maxRank)
+        //                    {
+        //                        objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                        RemoveAndReject(ref objWaitList, wlName, objWaitList.GetMaxRank());
+        //                        isAllotted = true;
+        //                    }
+        //                    else
+        //                    {
+        //                        PIList[candRollNo]++;
+        //                        Applicants.Enqueue(candRollNo);
+        //                    }
+        //                }
+        //            }
+
+        //            if (isAllotted)
+        //            {
+        //                if (!string.IsNullOrEmpty(oldWL) && oldWL != wlName)
+        //                {
+        //                    anyUpgradeHappened = true;
+        //                }
+
+        //                CurrentAllotment[candRollNo] = wlName;
+        //            }
+        //        }
+
+        //        isIterationRequired = anyUpgradeHappened;
+        //        iterationSeq++;
+        //    }
+
+        //    SaveFinalResultNew();
+
+        //    return new ActionOutput(ActionStatus.Success, "");
+        //}
+
+        //public ActionOutput AllotSeatNew()
+        //{
+        //    PreAllotmentProcessing();
+
+        //    DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand("Select RollNo from XT_VirtualChoice_Test");
+
+        //    LoadPreviousAllotment();
+        //    LoadVirtualChoice();
+        //    Dictionary<string, string> CurrentAllotment = new Dictionary<string, string>();
+
+        //    if (objAllAllotmentDetails != null)
+        //    {
+        //        foreach (var item in objAllAllotmentDetails)
+        //        {
+        //            string wl = item.Value.Instcd + "." + item.Value.Brcd + "." + item.Value.Sequence;
+        //            CurrentAllotment[item.Key] = wl;
+        //        }
+        //    }
+
+        //    bool isIterationRequired = true;
+        //    int iterationSeq = 1;
+        //    int maxIteration = 10;
+
+        //    while (isIterationRequired && iterationSeq <= maxIteration)
+        //    {
+        //        bool anyUpgradeHappened = false;
+
+        //        Dictionary<string, string> NewAllotment = new Dictionary<string, string>();
+
+        //        dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
+
+        //        Seats = new Dictionary<string, int>();
+        //        WaitListArray = new Dictionary<string, WaitList>(dtSeats.Rows.Count);
+
+        //        foreach (DataRow dr in dtSeats.Rows)
+        //        {
+        //            string wlKey = dr["WLKey"].ToString();
+        //            int seatCount = Convert.ToInt32(dr["TSeat"]);
+
+        //            Seats[wlKey] = seatCount;
+        //            WaitListArray[wlKey] = new WaitList();
+        //        }
+
+        //        PIList = new Dictionary<string, short>(dtEligibleCandidates.Rows.Count);
+        //        Applicants = new Queue<string>(dtEligibleCandidates.Rows.Count);
+
+        //        foreach (DataRow dr in dtEligibleCandidates.Rows)
+        //        {
+        //            string roll = dr["RollNo"].ToString();
+        //            Applicants.Enqueue(roll);
+        //            PIList[roll] = 1;
+        //        }
+
+        //        while (Applicants.Count > 0)
+        //        {
+        //            string candRollNo = Applicants.Dequeue();
+
+        //            if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
+        //                continue;
+
+        //            if (PIList[candRollNo] > AllChoices[candRollNo].VChoiceCount)
+        //                continue;
+
+        //            string wlName = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].VChoice;
+        //            double rank = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1].Rank;
+        //            if (!Seats.ContainsKey(wlName) || Seats[wlName] == 0)
+        //            {
+        //                PIList[candRollNo]++;
+        //                Applicants.Enqueue(candRollNo);
+        //                continue;
+        //            }
+
+        //            WaitList objWaitList = WaitListArray[wlName];
+
+        //            string oldWL = CurrentAllotment.ContainsKey(candRollNo) ? CurrentAllotment[candRollNo] : null;
+
+        //            int candRetainStatus = 0;
+        //            if (objAllAllotmentDetails != null && objAllAllotmentDetails.ContainsKey(candRollNo))
+        //                candRetainStatus = objAllAllotmentDetails[candRollNo].IsRetained;
+
+        //            bool isAllotted = false;
+
+        //            if (objWaitList.size() < Seats[wlName])
+        //            {
+        //                objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                isAllotted = true;
+        //            }
+        //            else
+        //            {
+        //                double maxRank = objWaitList.isEmpty() ? double.MaxValue : objWaitList.GetMaxRank();
+
+        //                if (rank < maxRank)
+        //                {
+        //                    objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                    var removedNode = objWaitList.RemoveWorst();
+        //                    if (removedNode != null)
+        //                    {
+        //                        PIList[removedNode.rollNo]++;
+        //                        Applicants.Enqueue(removedNode.rollNo);
+        //                    }
+        //                    isAllotted = true;
+        //                }
+        //                else
+        //                {
+        //                    PIList[candRollNo]++;
+        //                    Applicants.Enqueue(candRollNo);
+        //                }
+        //            }
+
+        //            if (isAllotted)
+        //            {
+        //                NewAllotment[candRollNo] = wlName;
+
+        //                if (!string.IsNullOrEmpty(oldWL) && oldWL != wlName)
+        //                {
+        //                    anyUpgradeHappened = true;
+        //                }
+        //            }
+        //        }
+
+        //        CurrentAllotment = new Dictionary<string, string>(NewAllotment);
+
+        //        isIterationRequired = anyUpgradeHappened;
+        //        iterationSeq++;
+        //    }
+
+        //    SaveFinalResultNew();
+
+        //    return new ActionOutput(ActionStatus.Success, "");
+        //}
+
+        //public ActionOutput AllotSeatNew()
+        //{
+        //    PreAllotmentProcessing();
+
+        //    DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand(
+        //        "Select RollNo from XT_VirtualChoice_Test"
+        //    );
+
+        //    LoadPreviousAllotment();
+        //    LoadVirtualChoice();
+
+        //    Dictionary<string, string> CurrentAllotment = new Dictionary<string, string>();
+        //    dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
+
+        //    if (objAllAllotmentDetails != null)
+        //    {
+        //        foreach (var item in objAllAllotmentDetails)
+        //        {
+        //            string wl = item.Value.Instcd + "." + item.Value.Brcd + "." + item.Value.Sequence;
+        //            CurrentAllotment[item.Key] = wl;
+        //        }
+        //    }
+
+        //    bool isIterationRequired = true;
+        //    int iterationSeq = 1;
+        //    int maxIteration = 10;
+
+        //    while (isIterationRequired && iterationSeq <= maxIteration)
+        //    {
+        //        bool anyUpgradeHappened = false;
+
+        //        Dictionary<string, string> NewAllotment = new Dictionary<string, string>();
+        //        Seats = new Dictionary<string, int>();
+        //        WaitListArray = new Dictionary<string, WaitList>(dtSeats.Rows.Count);
+
+        //        foreach (DataRow dr in dtSeats.Rows)
+        //        {
+        //            string wlKey = dr["WLKey"].ToString();
+        //            int seatCount = Convert.ToInt32(dr["TSeat"]);
+
+        //            Seats[wlKey] = seatCount;
+        //            WaitListArray[wlKey] = new WaitList();
+        //        }
+
+        //        PIList = new Dictionary<string, short>(dtEligibleCandidates.Rows.Count);
+        //        Applicants = new Queue<string>(dtEligibleCandidates.Rows.Count);
+
+        //        foreach (DataRow dr in dtEligibleCandidates.Rows)
+        //        {
+        //            string roll = dr["RollNo"].ToString();
+        //            Applicants.Enqueue(roll);
+        //            PIList[roll] = 1;
+        //        }
+
+        //        while (Applicants.Count > 0)
+        //        {
+        //            string candRollNo = Applicants.Dequeue();
+
+        //            if (!AllChoices.ContainsKey(candRollNo) || AllChoices[candRollNo].VChoiceCount == 0)
+        //                continue;
+
+        //            if (PIList[candRollNo] > AllChoices[candRollNo].VChoiceCount)
+        //                continue;
+
+        //            var choiceObj = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1];
+
+        //            string wlName = choiceObj.VChoice;
+        //            double rank = choiceObj.Rank;
+
+        //            if (!Seats.ContainsKey(wlName) || Seats[wlName] <= 0)
+        //            {
+        //                PIList[candRollNo]++;
+        //                Applicants.Enqueue(candRollNo);
+        //                continue;
+        //            }
+
+        //            WaitList objWaitList = WaitListArray[wlName];
+
+        //            int candRetainStatus = 0;
+        //            if (objAllAllotmentDetails != null && objAllAllotmentDetails.ContainsKey(candRollNo))
+        //                candRetainStatus = objAllAllotmentDetails[candRollNo].IsRetained;
+
+        //            bool isAllotted = false;
+
+        //            if (objWaitList.size() < Seats[wlName])
+        //            {
+        //                objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                isAllotted = true;
+        //            }
+        //            else
+        //            {
+        //                double maxRank = objWaitList.GetMaxRank();
+
+        //                if (rank < maxRank)
+        //                {
+        //                    var removedNode = objWaitList.RemoveWorst();
+
+        //                    if (removedNode != null)
+        //                    {
+        //                        PIList[removedNode.rollNo]++;
+        //                        Applicants.Enqueue(removedNode.rollNo);
+        //                    }
+
+        //                    objWaitList.Enqueue(new WaitListNode(candRollNo, rank, candRetainStatus));
+        //                    isAllotted = true;
+        //                }
+        //                else
+        //                {
+        //                    PIList[candRollNo]++;
+        //                    Applicants.Enqueue(candRollNo);
+        //                }
+        //            }
+
+        //            if (isAllotted)
+        //            {
+        //                NewAllotment[candRollNo] = wlName;
+
+        //                if (CurrentAllotment.ContainsKey(candRollNo) &&
+        //                    CurrentAllotment[candRollNo] != wlName)
+        //                {
+        //                    anyUpgradeHappened = true;
+        //                }
+        //            }
+        //        }
+
+        //        CurrentAllotment = new Dictionary<string, string>(NewAllotment);
+        //        if (Applicants.Count() == 0)
+        //        {
+        //            isIterationRequired = anyUpgradeHappened;
+        //            iterationSeq++;
+        //        }
+        //    }
+
+        //    SaveFinalResultNew();
+
+        //    return new ActionOutput(ActionStatus.Success, "");
+        //}
+
+        public ActionOutput AllotSeatNew()
+        {
+            PreAllotmentProcessing();
+
+            DataTable dtEligibleCandidates = objSql.GetDataTableUsingCommand(
+                "Select RollNo from XT_VirtualChoice_Test"
+            );
+
+            LoadPreviousAllotment();
+            LoadVirtualChoice();
+
+            dtSeats = objSql.GetDataTableUsingCommand("XP_GetProcessingSeat", CommandType.StoredProcedure);
+
+            Seats = new Dictionary<string, int>();
+            WaitListArray = new Dictionary<string, WaitList>();
+
+            foreach (DataRow dr in dtSeats.Rows)
+            {
+                string wlKey = dr["WLKey"].ToString();
+                int seatCount = Convert.ToInt32(dr["TSeat"]);
+
+                Seats[wlKey] = seatCount;
+                WaitListArray[wlKey] = new WaitList();
+            }
+
+            var SortedCandidates = dtEligibleCandidates.AsEnumerable()
+               .Select(r => r["RollNo"].ToString())
+               .OrderBy(rn =>
+                   (AllChoices.ContainsKey(rn) && AllChoices[rn].VChoiceCount > 0)
+                       ? AllChoices[rn].VChoices[0].Rank
+                       : double.MaxValue
+               )
+               .ToList();
+
+            PIList = new Dictionary<string, short>();
+            foreach (var roll in SortedCandidates)
+            {
+                PIList[roll] = 1;
+            }
+
+            FinalAllotment = new Dictionary<string, string>();
+
+            HashSet<string> Processed = new HashSet<string>();
+
+            bool movement = true;
+
+            while (movement)
+            {
+                movement = false;
+
+                foreach (var candRollNo in SortedCandidates)
+                {
+                    if (Processed.Contains(candRollNo))
+                        continue;
+
+                    if (!AllChoices.ContainsKey(candRollNo) ||
+                        AllChoices[candRollNo].VChoiceCount == 0)
+                        continue;
+
+                    if (PIList[candRollNo] > AllChoices[candRollNo].VChoiceCount)
+                        continue;
+
+                    var choiceObj = AllChoices[candRollNo].VChoices[PIList[candRollNo] - 1];
+
+                    string wlName = choiceObj.VChoice;
+                    double rank = choiceObj.Rank;
+
+                    if (!Seats.ContainsKey(wlName) || Seats[wlName] <= 0)
+                    {
+                        PIList[candRollNo]++;
+                        movement = true;
+                        continue;
+                    }
+
+                    WaitList objWaitList = WaitListArray[wlName];
+
+                    bool isAllotted = false;
+
+                    if (objWaitList.size() < Seats[wlName])
+                    {
+                        objWaitList.Enqueue(new WaitListNode(candRollNo, rank));
+                        isAllotted = true;
+                    }
+                    else
+                    {
+                        double maxRank = objWaitList.GetMaxRank();
+
+                        if (rank < maxRank)
+                        {
+                            var removedNode = objWaitList.RemoveWorst();
+
+                            if (removedNode != null)
+                            {
+                                Processed.Remove(removedNode.rollNo);
+                                PIList[removedNode.rollNo]++;
+                                movement = true;
+                            }
+
+                            objWaitList.Enqueue(new WaitListNode(candRollNo, rank));
+                            isAllotted = true;
+                        }
+                        else
+                        {
+                            PIList[candRollNo]++;
+                            movement = true;
+                        }
+                    }
+
+                    if (isAllotted)
+                    {
+                        FinalAllotment[candRollNo] = wlName;
+                        Processed.Add(candRollNo);
+                    }
+                }
+            }
+
+            SaveFinalResultNew();
+
+            return new ActionOutput(ActionStatus.Success, "");
+        }
+
+
+
+        public void SaveFinalResultNew()
+        {
+            string sequence = string.Empty;
+            string[] wlKeyElements = null;
+
+            DataTable dtAllotment = new DataTable();
+            dtAllotment.Columns.Add("RollNo");
+            dtAllotment.Columns.Add("Instcd");
+            dtAllotment.Columns.Add("Brcd");
+            dtAllotment.Columns.Add("Sequence");
+            dtAllotment.Columns.Add("Rank");
+
+            DataTable dtSeat = new DataTable();
+            dtSeat.Columns.Add("Instcd");
+            dtSeat.Columns.Add("Brcd");
+            dtSeat.Columns.Add("Sequence");
+            dtSeat.Columns.Add("Seats");
+            dtSeat.Columns.Add("Allotted");
+
+            Dictionary<string, int> AllottedCount = new Dictionary<string, int>();
+
+            foreach (var item in FinalAllotment)
+            {
+                string wlKey = item.Value;
+
+                if (AllottedCount.ContainsKey(wlKey))
+                    AllottedCount[wlKey]++;
+                else
+                    AllottedCount[wlKey] = 1;
+            }
+
+            foreach (var seat in Seats)
+            {
+                string wlKey = seat.Key;
+
+                wlKeyElements = wlKey.Split('.');
+                sequence = wlKey.Substring(wlKeyElements[0].Length + wlKeyElements[1].Length + 2);
+
+                int allotted = AllottedCount.ContainsKey(wlKey) ? AllottedCount[wlKey] : 0;
+
+                dtSeat.Rows.Add(new object[]
+                {
+            wlKeyElements[0],
+            wlKeyElements[1],
+            sequence,
+            seat.Value,
+            allotted
+                });
+            }
+
+            foreach (var item in FinalAllotment)
+            {
+                string roll = item.Key;
+                string wlKey = item.Value;
+
+                wlKeyElements = wlKey.Split('.');
+                sequence = wlKey.Substring(wlKeyElements[0].Length + wlKeyElements[1].Length + 2);
+
+                double rank = GetBestRank(roll);
+
+                dtAllotment.Rows.Add(new object[]
+                {
+            roll,
+            wlKeyElements[0],
+            wlKeyElements[1],
+            sequence,
+            rank
+                });
+            }
+
+            objSql.ExecuteCommand("TRUNCATE TABLE XT_Allotted");
+            objSql.ExecuteCommand("TRUNCATE TABLE XT_Dereserve");
+
+            objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotted", 500);
+            objSql.SaveTableUsingBulkCopy(ref dtSeat, "XT_Dereserve", 500);
+
+            objSql.ExecuteCommand(@"
+        UPDATE A 
+        SET A.tSeat = B.Seats,
+            A.aSeat = B.Allotted,
+            A.bSeat = B.Seats - B.Allotted
+        FROM XT_PSeat A
+        INNER JOIN XT_Dereserve B 
+            ON A.Instcd = B.Instcd 
+            AND A.Brcd = B.Brcd 
+            AND A.Sequence = B.Sequence
+    ");
+        }
+
+        public ActionOutput AllotSeat()
+        {
+            throw new NotImplementedException();
+        }
+
+        private double GetBestRank(string rollNo)
+        {
+            if (!AllChoices.ContainsKey(rollNo))
+                return double.MaxValue;
+
+            return AllChoices[rollNo].VChoices.Min(x => x.Rank);
+        }
+        private int GetNextChoiceIndex(string rollNo, string currentWL)
+        {
+            var choices = AllChoices[rollNo].VChoices;
+
+            for (int i = 0; i < choices.Count(); i++)
+            {
+                if (choices[i].VChoice == currentWL)
+                    return i + 1;
+            }
+
+            return choices.Count();
         }
     }
 }

@@ -104,7 +104,7 @@ namespace BAL
             SqlParameter[] sqlParameters = new SqlParameter[2];
             sqlParameters[0] = new SqlParameter("@" + DBParam_BoardId, boardId);
             sqlParameters[1] = new SqlParameter("@" + DBParam_RoundNo, roundNo);
-            SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_Virtual_Creation, sqlParameters);
+           // SqlHelper.ExecuteNonQuery(connectionString, CommandType.StoredProcedure, DBProc_Virtual_Creation, sqlParameters);
             //int previousAllotment = Convert.ToInt32(SqlHelper.ExecuteDataset(connectionString, CommandType.Text, "select isnull(count(*),0) from XT_PreviousAllotment").Tables[0].Rows[0][0]);
             return new ActionOutput(ActionStatus.Success, "Completed:");
         }

@@ -15,6 +15,7 @@ namespace AppFramework
         ActionOutput PreparePreviousAllotment();
         ActionOutput CreateVirtualChoice();        
         ActionOutput AllotSeat();       
+        ActionOutput AllotSeatNew();       
         ActionOutput PrepareAllotmentSummary();
         ActionOutput UpdateApplicationAfterAllocation();
         DataTable GetVirtualChoice(string rollno);
