@@ -31,6 +31,7 @@ namespace AppFramework
         public string rollNo;
         public double rank;
         public int isRetained;
+        public string seat;
         public WaitListNode(string RollNo, double Rank)
         {
             rollNo = RollNo;
@@ -43,6 +44,13 @@ namespace AppFramework
             rollNo = RollNo;
             rank = Rank;
             this.isRetained = isRetained;
+        }
+        public WaitListNode(string RollNo, double Rank, int isRetained,string Seat)
+        {
+            rollNo = RollNo;
+            rank = Rank;
+            this.isRetained = isRetained;
+            seat = Seat;
         }
 
     }
@@ -204,6 +212,10 @@ namespace AppFramework
             _nodes.Add(node);
             Swim(_nodes.Count - 1);
         }
+        public void EnqueueDummy(WaitListNode node)
+        {
+            _nodes.Add(node);
+        }
 
         public int size()
         {
@@ -282,6 +294,11 @@ namespace AppFramework
             var temp = _nodes[i];
             _nodes[i] = _nodes[j];
             _nodes[j] = temp;
+        }
+
+        public void RemoveByRollNo(string rollNo)
+        {
+            _nodes = _nodes.Where(x => x.rollNo != rollNo).ToList();
         }
     }
 
