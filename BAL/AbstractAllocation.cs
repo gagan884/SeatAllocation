@@ -1572,10 +1572,16 @@ group by A.Sequence order by A.Sequence").Rows)
         //    return new ActionOutput(ActionStatus.Success, "");
         //}
 
-        private string ConvertPrevToSeatKey(string prevSeat)
+        private string ConvertPrevToSeatKey(string prevSeat,bool key)
         {
             var parts = prevSeat.Split('.');
+            if (key)
+            {
+                parts[5] = "AI";
+                parts[6] = "OP";
+                parts[8] = "B";
 
+            }
 
             if (parts.Length == 9)
             {
@@ -2287,7 +2293,14 @@ group by A.Sequence order by A.Sequence").Rows)
                 }
             }
 
-            objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotted", 500);
+            try
+            {
+                objSql.SaveTableUsingBulkCopy(ref dtAllotment, "XT_Allotted", 500);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
             dtAllotment.Clear();
             dtAllotment = null;
 
@@ -2298,12 +2311,132 @@ group by A.Sequence order by A.Sequence").Rows)
             objSql.ExecuteCommand("update A Set A.tSeat=B.Seats,A.aSeat=B.Allotted,A.bSeat=B.Seats-B.Allotted From XT_PSeat A inner join XT_Dereserve B on A.Instcd=B.Instcd and a.Brcd=B.Brcd and A.Sequence=B.Sequence and B.IterationNo=(select max(IterationNo) from XT_Dereserve) ");
         }
 
+        //public ActionOutput AllotSeatNew()
+        //{
+        //    PreAllotmentProcessing();
+
+        //    var dtEligibleCandidates = objSql.GetDataTableUsingCommand(
+        //        "Select RollNo from XT_VirtualChoice_Test"
+        //    );
+
+        //    LoadPreviousAllotment();
+        //    LoadVirtualChoice();
+
+        //    var dtSeats = objSql.GetDataTableUsingCommand(
+        //        "XP_GetProcessingSeat", CommandType.StoredProcedure
+        //    );
+
+        //     Seats = new Dictionary<string, int>();
+        //    foreach (DataRow dr in dtSeats.Rows)
+        //    {
+        //        Seats[dr["WLKey"].ToString()] = Convert.ToInt32(dr["TSeat"]);
+        //    }
+
+        //    Dictionary<string, string> PreviousSeatMap = new Dictionary<string, string>();
+        //    if (objAllAllotmentDetails != null)
+        //    {
+        //        foreach (var item in objAllAllotmentDetails)
+        //        {
+        //            string wl = item.Value.Instcd + "." + item.Value.Brcd + "." + item.Value.Sequence;
+        //            PreviousSeatMap[item.Key] = ConvertPrevToSeatKey(wl);
+        //        }
+        //    }
+
+        //    var AllCandidates = dtEligibleCandidates.AsEnumerable()
+        //        .Select(r => r["RollNo"].ToString())
+        //        .ToList();
+
+        //    foreach (var kvp in PreviousSeatMap)
+        //    {
+        //        if (Seats.ContainsKey(kvp.Value))
+        //            Seats[kvp.Value]++;
+        //        else
+        //            Seats[kvp.Value] = 1;
+        //    }
+
+        //    HashSet<string> lockedCandidates = new HashSet<string>();
+        //    Dictionary<string, WaitListNode> FinalAllotment = new Dictionary<string, WaitListNode>();
+
+        //    bool changed;
+
+        //    do
+        //    {
+        //        changed = false;
+
+        //        var activeCandidates = AllCandidates
+        //            .Where(c => !lockedCandidates.Contains(c))
+        //            .ToList();
+
+        //        var iterationResult = RunAllocation(activeCandidates, Seats);
+
+        //        FinalAllotment.Clear();
+        //        //foreach (var locked in lockedCandidates)
+        //        //{
+        //        //    if (PreviousSeatMap.ContainsKey(locked))
+        //        //        FinalAllotment[locked] = PreviousSeatMap[locked]; 
+        //        //    else if (iterationResult.ContainsKey(locked))       
+        //        //        FinalAllotment[locked] = iterationResult[locked];
+        //        //}
+
+        //        foreach (var kv in iterationResult)
+        //            FinalAllotment[kv.Key] = kv.Value;
+
+        //        foreach (var kvp in PreviousSeatMap)
+        //        {
+        //            string cand = kvp.Key;
+        //            string prevWL = kvp.Value;
+
+        //            if (lockedCandidates.Contains(cand))
+        //                continue;
+
+        //            WaitListNode corr = iterationResult.TryGetValue(cand, out var val) ? val : null;
+        //            string currWL = corr?.seat;
+        //            if (currWL == prevWL)
+        //            {
+        //                Seats[prevWL]--;
+        //                lockedCandidates.Add(cand);
+        //                changed = true;
+        //            }
+        //            else if (currWL == null)
+        //            {
+        //                Seats[prevWL]--;
+        //                lockedCandidates.Add(cand);
+        //                changed = true;
+        //            }
+        //        }
+
+        //    } while (changed);
+
+        //    WaitListArray = new Dictionary<string, WaitList>();
+
+        //    var groupedBySeat = FinalAllotment
+        //        .GroupBy(kvp => kvp.Value.seat);
+
+        //    foreach (var group in groupedBySeat)
+        //    {
+        //        WaitList wait = new WaitList(); 
+
+        //        foreach (var kvp in group)
+        //        {
+        //            WaitListNode nd = new WaitListNode(kvp.Key, kvp.Value.rank);
+        //            wait.EnqueueDummy(nd);
+        //        }
+
+        //        WaitListArray[group.Key] = wait;
+        //    }
+
+        //    SaveIterationResult(1);
+        //    return new ActionOutput(ActionStatus.Success, "");
+        //}
+
         public ActionOutput AllotSeatNew()
         {
+            bool isFinalRound = (roundNo == 3);
+
             PreAllotmentProcessing();
 
             var dtEligibleCandidates = objSql.GetDataTableUsingCommand(
-                "Select RollNo from XT_VirtualChoice_Test"
+                "Select RollNo from XT_VirtualChoice"
             );
 
             LoadPreviousAllotment();
@@ -2313,7 +2446,7 @@ group by A.Sequence order by A.Sequence").Rows)
                 "XP_GetProcessingSeat", CommandType.StoredProcedure
             );
 
-             Seats = new Dictionary<string, int>();
+            Seats = new Dictionary<string, int>();
             foreach (DataRow dr in dtSeats.Rows)
             {
                 Seats[dr["WLKey"].ToString()] = Convert.ToInt32(dr["TSeat"]);
@@ -2325,7 +2458,7 @@ group by A.Sequence order by A.Sequence").Rows)
                 foreach (var item in objAllAllotmentDetails)
                 {
                     string wl = item.Value.Instcd + "." + item.Value.Brcd + "." + item.Value.Sequence;
-                    PreviousSeatMap[item.Key] = ConvertPrevToSeatKey(wl);
+                    PreviousSeatMap[item.Key] = ConvertPrevToSeatKey(wl,isFinalRound);
                 }
             }
 
@@ -2401,7 +2534,7 @@ group by A.Sequence order by A.Sequence").Rows)
 
             foreach (var group in groupedBySeat)
             {
-                WaitList wait = new WaitList(); 
+                WaitList wait = new WaitList();
 
                 foreach (var kvp in group)
                 {
@@ -2415,6 +2548,8 @@ group by A.Sequence order by A.Sequence").Rows)
             SaveIterationResult(1);
             return new ActionOutput(ActionStatus.Success, "");
         }
+
+
 
         private Dictionary<string, WaitListNode> RunAllocation(
             List<string> candidates,
